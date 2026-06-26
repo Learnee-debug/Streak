@@ -2,8 +2,8 @@ name: 🔥 Daily Streak Counter
 
 on:
   schedule:
-    - cron: '30 6 * * *'   # 12:00 PM IST (UTC+5:30) = 06:30 UTC
-  workflow_dispatch:        # Manual trigger from GitHub UI anytime
+    - cron: '30 6 * * *'
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -21,55 +21,42 @@ jobs:
           python3 << 'EOF'
           import json
           from datetime import datetime, timezone
-
           today = datetime.now(timezone.utc).strftime('%Y-%m-%d')
-
-          # Load or initialize streak.json
           try:
               with open('streak.json', 'r') as f:
                   data = json.load(f)
           except FileNotFoundError:
               data = {'streak': 0, 'started': today, 'last_updated': None}
-
           data['streak'] += 1
           data['last_updated'] = today
           data.setdefault('started', today)
-
           with open('streak.json', 'w') as f:
               json.dump(data, f, indent=2)
-
           streak = data['streak']
           started = data['started']
-
-          # Update README.md streak badge section
-          readme_content = f"""# 🔥 Daily Streak Tracker
-
-<!-- STREAK_START -->
-| Stat | Value |
-|------|-------|
-| 🔥 Current Streak | **{streak} days** |
-| 📅 Today | {today} |
-| 🚀 Started | {started} |
-<!-- STREAK_END -->
-
-> Auto-committed daily at 12:00 PM IST via GitHub Actions.
-> No server. No deployment. Just consistency.
-"""
-
+          lines = [
+              "# Daily Streak Tracker",
+              "",
+              "| Stat | Value |",
+              "|------|-------|",
+              f"| Streak | **{streak} days** |",
+              f"| Today | {today} |",
+              f"| Started | {started} |",
+              "",
+              "> Auto-committed daily at 12 PM IST via GitHub Actions.",
+              "> No server. No deployment. Just consistency.",
+          ]
           with open('README.md', 'w') as f:
-              f.write(readme_content)
-
-          print(f"✅ Streak updated: Day {streak} | {today}")
+              f.write('\n'.join(lines) + '\n')
+          print(f"Day {streak} done!")
           EOF
 
       - name: Commit and push
         run: |
           STREAK=$(python3 -c "import json; print(json.load(open('streak.json'))['streak'])")
           TODAY=$(date -u '+%Y-%m-%d')
-
           git config --local user.email "github-actions[bot]@users.noreply.github.com"
           git config --local user.name "github-actions[bot]"
-
           git add streak.json README.md
           git commit -m "🔥 Day $STREAK — $TODAY"
           git push
