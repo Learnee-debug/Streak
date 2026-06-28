@@ -38,6 +38,43 @@ jobs:
               json.dump(data, f, indent=2)
           with open('activity.log', 'a') as f:
               f.write(f"{now.strftime('%Y-%m-%d %H:%M:%S')} UTC — commit #{data['total_commits']}\n")
+
+          today = now.strftime('%Y-%m-%d')
+          try:
+              with open('streak.json', 'r') as f:
+                  streak_data = json.load(f)
+          except FileNotFoundError:
+              streak_data = {'streak': 0, 'started': today, 'last_updated': None}
+
+          if streak_data.get('last_updated') != today:
+              from datetime import date
+              last = streak_data.get('last_updated')
+              if last:
+                  gap = (date.fromisoformat(today) - date.fromisoformat(last)).days
+              else:
+                  gap = 1
+              streak_data['streak'] = streak_data.get('streak', 0) + 1 if gap == 1 else 1
+              if gap != 1:
+                  streak_data['started'] = today
+              streak_data['last_updated'] = today
+              with open('streak.json', 'w') as f:
+                  json.dump(streak_data, f, indent=2)
+
+              lines = [
+                  "# Daily Streak Tracker",
+                  "",
+                  "| Stat | Value |",
+                  "|------|-------|",
+                  f"| Streak | **{streak_data['streak']} days** |",
+                  f"| Today | {today} |",
+                  f"| Started | {streak_data['started']} |",
+                  "",
+                  "> Auto-committed daily via GitHub Actions.",
+                  "> No server. No deployment. Just consistency.",
+                  "",
+              ]
+              with open('README.md', 'w') as f:
+                  f.write("\n".join(lines))
           EOF
 
       - name: Make random commits
@@ -68,7 +105,7 @@ jobs:
             python3 /tmp/update.py
             IDX=$((RANDOM % ${#MSGS[@]}))
             MSG="${MSGS[$IDX]}"
-            git add stats.json activity.log
+            git add stats.json activity.log streak.json README.md
             git commit -m "$MSG — $(date -u '+%H:%M:%S')"
             sleep 2
           done
