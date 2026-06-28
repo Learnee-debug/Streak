@@ -82,8 +82,8 @@ jobs:
           git config user.email "177908686+Learnee-debug@users.noreply.github.com"
           git config user.name "Learnee-debug"
 
-          # Random number of commits: 6 to 8 per session (4 sessions/day = ~25-30/day)
-          NUM=$(python3 -c "import random; print(random.randint(6, 8))")
+          # Random number of commits: 9 to 10 per session (4 sessions/day = ~36-40/day)
+          NUM=$(python3 -c "import random; print(random.randint(9, 10))")
           echo "🎲 Making $NUM commits this session..."
 
           MSGS=(
